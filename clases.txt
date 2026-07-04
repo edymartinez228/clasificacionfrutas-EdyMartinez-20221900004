@@ -1,0 +1,36 @@
+Apple 9
+Banana 1
+Blackberry 1
+Blueberry 1
+Cactus fruit 1
+Carrot 1
+Cherry 1
+Cocos 1
+Corn 1
+Eggplant 1
+Granadilla 1
+Kaki 1
+Kiwi 1
+Lemon 1
+Limes 1
+Mandarine 1
+Mango 1
+Mangostan 1
+Melon Piel de Sapo 1
+Nut 1
+Orange 1
+Papaya 1
+Pear 1
+Pepino 1
+Pineapple 1
+Pistachio 1
+Pomegranate 1
+Pomelo Sweetie 1
+Potato Red 1
+Quince 1
+Rambutan 1
+Raspberry 1
+Strawberry 1
+Tamarillo 1
+Tomato 1
+Watermelon 1
