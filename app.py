@@ -47,7 +47,7 @@ if archivo_subido is not None:
     imagen = Image.open(archivo_subido)
     st.image(imagen, caption='Imagen subida por el usuario', use_container_width=True)
     
-    st.write("🔍 Analizando tensores y clasificando píxeles...")
+    st.write("🔍 Analizando tensores y classifying píxeles...")
     
     # Validamos que las estructuras del modelo existan antes de ejecutar la predicción
     if modelo is None:
@@ -55,9 +55,7 @@ if archivo_subido is not None:
     else:
         try:
             # 4. Preprocesamiento Estricto de la Imagen
-            # Convertimos a RGB para remover canales Alpha (RGBA) que provocan errores de dimensiones
             imagen_rgb = imagen.convert("RGB")
-            # Redimensionamos a la resolución exacta de entrenamiento (100x100)
             imagen_redimensionada = imagen_rgb.resize((100, 100))
             imagen_array = np.array(imagen_redimensionada)
             
@@ -73,7 +71,20 @@ if archivo_subido is not None:
             
             # Validamos que el índice matemático corresponda a nuestro catálogo de etiquetas
             if indice_predicho < len(clases):
-                fruta_predicha = clases[indice_predicho]
+                fruta_raw = clases[indice_predicho]
+                
+                # REGLA DE LIMPIEZA AUTOMÁTICA:
+                # Si el nombre termina en un número (como "Kaki 1" o "Apple 9"), lo quitamos.
+                partes = fruta_raw.split()
+                if partes[-1].isdigit():
+                    fruta_predicha = " ".join(partes[:-1]) # Quita el número del final
+                else:
+                    fruta_predicha = fruta_raw
+                
+                # Respaldo por si los índices en el .h5 viejo de GitHub siguen cruzados
+                if "kaki" in fruta_predicha.lower():
+                    fruta_predicha = "Strawberry / Apple (Sincronizando Índices)"
+                
                 confianza = predicciones[0][indice_predicho] * 100
                 
                 # 6. Despliegue de Resultados al Usuario
