@@ -7,15 +7,15 @@ import numpy as np
 st.set_page_config(page_title="Clasificador de Frutas IA", page_icon="🍎", layout="centered")
 
 st.title("🍎 Clasificador de Frutas con Inteligencia Artificial 🍌")
-st.write("Sube la foto de una fruta y el modelo de Deep Learning entrenado te dirá qué fruta es.")
+st.write("Sube la foto de una fruta y el modelo compacto de Deep Learning te dirá qué fruta es.")
 
-# 2. Función optimizada para cargar el modelo y las etiquetas sincronizadas
+# 2. Función optimizada para cargar el modelo compacto y las etiquetas
 @st.cache_resource
 def cargar_modelo():
-    # Carga el archivo del modelo .h5 de la raíz del repositorio
+    # Carga el archivo del modelo liviano (.h5 de menos de 10MB)
     modelo_ia = tf.keras.models.load_model('modelo_frutas.h5')
     
-    # Lee las etiquetas generadas automáticamente por el nuevo train.py
+    # Lee las etiquetas generadas por el train.py compacto
     lista_clases = []
     with open("clases.txt", "r") as f:
         for linea in f.readlines():
@@ -23,76 +23,62 @@ def cargar_modelo():
             if linea_limpia:
                 lista_clases.append(linea_limpia)
                 
-    # Forzamos orden alfabético estricto idéntico al parámetro classes=clases_ordenadas de train.py
+    # Aseguramos el orden alfabético estricto coincidente con el entrenamiento
     lista_clases = sorted(lista_clases)
     return modelo_ia, lista_clases
 
-# Inicializamos variables globales para prevenir errores de tipo 'NameError'
+# Inicializamos variables globales para mitigar NameErrors en fallas de carga
 modelo = None
 clases = []
 
-# Bloque de inicialización seguro
 try:
     modelo, clases = cargar_modelo()
-    st.success("¡Modelo de IA y diccionario de clases cargados con éxito!")
+    st.success(f"¡Modelo de IA cargado con éxito! ({len(clases)} clases sincronizadas)")
 except Exception as e:
     st.error(f"❌ Error crítico al inicializar la IA: {e}")
-    st.info("Asegúrate de que los archivos 'modelo_frutas.h5' y 'clases.txt' estén guardados en la raíz de tu repositorio de GitHub.")
+    st.info("Verifica que los archivos 'modelo_frutas.h5' y 'clases.txt' estén en la raíz de tu GitHub.")
 
-# 3. Componente de Carga de Archivos en la Interfaz
+# 3. Módulo de carga de archivos
 archivo_subido = st.file_uploader("Elige una imagen de una fruta (JPG, JPEG, PNG)...", type=["jpg", "jpeg", "png"])
 
 if archivo_subido is not None:
-    # Desplegar la imagen seleccionada por el usuario
+    # Desplegar la imagen en la app
     imagen = Image.open(archivo_subido)
     st.image(imagen, caption='Imagen subida por el usuario', use_container_width=True)
     
-    st.write("🔍 Analizando tensores y classifying píxeles...")
+    st.write("🔍 Extrayendo características y clasificando...")
     
-    # Validamos que las estructuras del modelo existan antes de ejecutar la predicción
     if modelo is None:
-        st.error("El modelo de IA no está disponible en el servidor. Revisa los mensajes de error superiores.")
+        st.error("El modelo de IA no está disponible en el servidor.")
     else:
         try:
-            # 4. Preprocesamiento Estricto de la Imagen
+            # 4. Preprocesamiento Estricto para el Modelo Compacto (64x64)
             imagen_rgb = imagen.convert("RGB")
-            imagen_redimensionada = imagen_rgb.resize((100, 100))
+            
+            # Redimensionamos a 64x64 de forma exacta para coincidir con la nueva arquitectura
+            imagen_redimensionada = imagen_rgb.resize((64, 64))
             imagen_array = np.array(imagen_redimensionada)
             
-            # Normalizamos los valores de los píxeles al rango [0, 1]
+            # Normalización de píxeles al rango [0, 1]
             imagen_array = imagen_array / 255.0
             
-            # Agregamos la dimensión del lote para generar un tensor de forma (1, 100, 100, 3)
+            # Expandimos dimensiones para simular el lote -> Forma final: (1, 64, 64, 3)
             imagen_array = np.expand_dims(imagen_array, axis=0)
             
-            # 5. Proceso de Inferencia y Predicción
+            # 5. Ejecución de la Inferencia
             predicciones = modelo.predict(imagen_array)
             indice_predicho = np.argmax(predicciones)
             
-            # Validamos que el índice matemático corresponda a nuestro catálogo de etiquetas
+            # 6. Despliegue del Resultado Limpio
             if indice_predicho < len(clases):
-                fruta_raw = clases[indice_predicho]
-                
-                # REGLA DE LIMPIEZA AUTOMÁTICA:
-                # Si el nombre termina en un número (como "Kaki 1" o "Apple 9"), lo quitamos.
-                partes = fruta_raw.split()
-                if partes[-1].isdigit():
-                    fruta_predicha = " ".join(partes[:-1]) # Quita el número del final
-                else:
-                    fruta_predicha = fruta_raw
-                
-                # Respaldo por si los índices en el .h5 viejo de GitHub siguen cruzados
-                if "kaki" in fruta_predicha.lower():
-                    fruta_predicha = "Strawberry / Apple (Sincronizando Índices)"
-                
+                fruta_predicha = clases[indice_predicho]
                 confianza = predicciones[0][indice_predicho] * 100
                 
-                # 6. Despliegue de Resultados al Usuario
                 st.subheader(f"Resultado de Predicción: **{fruta_predicha}**")
                 st.progress(int(confianza))
                 st.write(f"📊 Nivel de confianza algorítmica: **{confianza:.2f}%**")
             else:
-                st.error(f"Desbalance de Índices: El modelo arrojó el índice {indice_predicho}, pero tu catálogo cuenta con {len(clases)} clases.")
+                st.error(f"Desbalance: El modelo arrojó el índice {indice_predicho}, pero tu catálogo cuenta con {len(clases)} clases.")
                 
         except Exception as error_proceso:
             st.error(f"Ocurrió un error matemático al procesar la imagen: {error_proceso}")
